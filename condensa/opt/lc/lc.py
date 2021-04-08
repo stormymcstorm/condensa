@@ -208,18 +208,54 @@ class LC(object):
                                      **self.l_optimizer_params)
         optimizer.reset_state()
 
+        context = {
+            'iteration': -1,
+            'learing_rate': learning_rate,
+            'mu': mu,
+            'theta': theta,
+        }
+
         if not _disable_train_stats:
-            w_train_loss, w_train_stats = _model_stat_fn(w, loss_fn, trainloader)
+            try:
+                w_train_loss, w_train_stats = _model_stat_fn(
+                    w, 
+                    loss_fn, 
+                    trainloader, 
+                    loader='train',
+                    context=context
+                )
+            except TypeError:
+                w_train_loss, w_train_stats = _model_stat_fn(w, loss_fn, trainloader)
+
             logger.info('[Condensa] w TRAIN\tloss={:.5f}, {}'
                 .format(w_train_loss,
                 ', '.join(['{}:{}'.format(k, v) for k,v in w_train_stats.items()])))
         if validate:
-            w_val_loss, w_val_stats = _model_stat_fn(w, loss_fn, valloader)
+            try:
+                w_val_loss, w_val_stats = _model_stat_fn(
+                    w, 
+                    loss_fn, 
+                    valloader, 
+                    loader='val',
+                    context=context
+                )
+            except TypeError:
+                w_val_loss, w_val_stats = _model_stat_fn(w, loss_fn, valloader)
+
             logger.info('[Condensa] w VAL\tloss={:.5f}, {}'
                 .format(w_val_loss,
                 ', '.join(['{}:{}'.format(k, v) for k,v in w_val_stats.items()])))
         if test:
-            w_test_loss, w_test_stats = _model_stat_fn(w, loss_fn, testloader)
+            try:
+                w_test_loss, w_test_stats = _model_stat_fn(
+                    w, 
+                    loss_fn, 
+                    testloader, 
+                    loader='test',
+                    context=context)
+            except TypeError:
+                w_test_loss, w_test_stats = _model_stat_fn(w, loss_fn, testloader)
+
             logger.info('[Condensa] w TEST\tloss={:.5f}, {}'
                 .format(w_test_loss,
                 ', '.join(['{}:{}'.format(k, v) for k,v in w_test_stats.items()])))
@@ -324,22 +360,37 @@ class LC(object):
 
             pi(theta)
 
+            context['iteration'] = j
+            context['learing_rate'] = learning_rate
+            context['theta'] = theta
             if not _disable_train_stats:
-                nested_train_loss, nested_train_stats = _model_stat_fn(theta, loss_fn, trainloader)
+                try:
+                    nested_train_loss, nested_train_stats = _model_stat_fn(theta, loss_fn, trainloader, loader='train', context=context)
+                except TypeError:
+                    nested_train_loss, nested_train_stats = _model_stat_fn(theta, loss_fn, trainloader)
+
                 train_losses.append(nested_train_loss)
                 logger.info(
                     '[Condensa] Nested (theta) TRAIN\tloss={:.5f}, {}'
                     .format(nested_train_loss,
                     ', '.join(['{}:{}'.format(k, v) for k,v in nested_train_stats.items()])))
             if validate:
-                nested_val_loss, nested_val_stats = _model_stat_fn(theta, loss_fn, valloader)
+                try:
+                    nested_val_loss, nested_val_stats = _model_stat_fn(theta, loss_fn, valloader, loader='val', context=context)
+                except TypeError:
+                    nested_val_loss, nested_val_stats = _model_stat_fn(theta, loss_fn, valloader)
+
                 val_losses.append(nested_val_loss)
                 logger.info(
                     '[Condensa] Nested (theta) VAL\tloss={:.5f}, {}'
                     .format(nested_val_loss,
                     ', '.join(['{}:{}'.format(k, v) for k,v in nested_val_stats.items()])))
             if test:
-                nested_test_loss, nested_test_stats = _model_stat_fn(theta, loss_fn, testloader)
+                try:
+                    nested_test_loss, nested_test_stats = _model_stat_fn(theta, loss_fn, testloader, loader='test', context=context)
+                except TypeError:
+                    nested_test_loss, nested_test_stats = _model_stat_fn(theta, loss_fn, testloader)
+
                 test_losses.append(nested_test_loss)
                 logger.info(
                     '[Condensa] Nested (theta) TEST\tloss={:.5f}, {}'
